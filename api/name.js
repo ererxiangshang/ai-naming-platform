@@ -94,6 +94,7 @@ export default async function handler(req, res) {
     stream: true,
     temperature: 0.9,
     max_tokens: 900,
+    ...(conf.extra || {}),
   });
   const headers = {
     'Content-Type': 'application/json',

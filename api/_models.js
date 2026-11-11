@@ -11,8 +11,11 @@ export const modelConfigMap = {
     label: '豆包（火山方舟）',
     baseURL: process.env.DOUBAO_BASE_URL || 'https://ark.cn-beijing.volces.com/api/v3',
     apiKeyEnv: 'DOUBAO_API_KEY',
-    model: process.env.DOUBAO_MODEL || 'doubao-seed-1-6-250615',
+    model: process.env.DOUBAO_MODEL || 'doubao-seed-2-1-lite-260915',
     apiKey: process.env.DOUBAO_API_KEY || '',
+    // 豆包默认会先输出一段 reasoning_content（思考过程），既费 token 又拖慢首字，
+    // 起名这种简单任务直接关掉思考，只留最终文本
+    extra: { thinking: { type: 'disabled' } },
   },
   deepseek: {
     id: 'deepseek',
