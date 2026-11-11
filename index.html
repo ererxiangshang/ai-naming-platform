@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>锦名 · AI 起名平台</title>
+<style>
+  :root {
+    --ink: #1f2a2a;
+    --muted: #6b7a76;
+    --paper: #f6f3ec;
+    --card: #ffffff;
+    --brand: #14695e;
+    --brand-2: #1f8a76;
+    --gold: #b98a3c;
+    --line: #e3ddd0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+    color: var(--ink);
+    background: radial-gradient(1200px 600px at 15% -10%, #e8f0e8 0%, transparent 60%),
+                radial-gradient(900px 500px at 90% 0%, #f3ead8 0%, transparent 55%),
+                var(--paper);
+    min-height: 100vh;
+  }
+  .wrap { max-width: 1020px; margin: 0 auto; padding: 40px 20px 72px; }
+  header { text-align: center; margin-bottom: 32px; }
+  .seal {
+    display: inline-block; width: 56px; height: 56px; line-height: 56px;
+    border-radius: 12px; background: var(--brand); color: #fff;
+    font-size: 26px; letter-spacing: 2px; box-shadow: 0 8px 24px rgba(20,105,94,.25);
+  }
+  h1 { font-size: 30px; margin: 16px 0 8px; letter-spacing: 1px; }
+  header p { color: var(--muted); margin: 0; font-size: 14px; }
+
+  .panel {
+    background: var(--card); border: 1px solid var(--line); border-radius: 18px;
+    padding: 24px; box-shadow: 0 12px 36px rgba(31,42,42,.06);
+  }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .field { flex: 1 1 180px; }
+  label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  textarea, select {
+    width: 100%; font: inherit; font-size: 15px; color: var(--ink);
+    background: #fbfaf7; border: 1px solid var(--line); border-radius: 12px;
+    padding: 12px 14px; outline: none; transition: border-color .15s, box-shadow .15s;
+  }
+  textarea { resize: vertical; min-height: 84px; }
+  textarea:focus, select:focus { border-color: var(--brand-2); box-shadow: 0 0 0 3px rgba(31,138,118,.12); }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .tag {
+    font-size: 12px; color: var(--brand); background: #eaf4f0; border: 1px solid #cfe4dc;
+    padding: 6px 10px; border-radius: 999px; cursor: pointer; user-select: none;
+  }
+  .tag:hover { background: #dcefe8; }
+  button.primary {
+    margin-top: 18px; width: 100%; font: inherit; font-size: 16px; font-weight: 600;
+    color: #fff; background: linear-gradient(120deg, var(--brand), var(--brand-2));
+    border: 0; border-radius: 12px; padding: 14px 18px; cursor: pointer;
+    box-shadow: 0 10px 26px rgba(20,105,94,.2); transition: transform .1s, opacity .15s;
+  }
+  button.primary:active { transform: translateY(1px); }
+  button.primary:disabled { opacity: .6; cursor: not-allowed; box-shadow: none; }
+
+  .status { display: none; margin-top: 14px; font-size: 13px; color: var(--muted); }
+  .status.show { display: flex; align-items: center; gap: 8px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brand-2); animation: pulse 1.2s infinite; }
+  @keyframes pulse { 0%,100% { opacity: .3 } 50% { opacity: 1 } }
+
+  .result-card {
+    margin-top: 22px; background: var(--card); border: 1px solid var(--line);
+    border-radius: 18px; padding: 24px; display: none;
+  }
+  .result-card.show { display: block; animation: rise .3s ease-out; }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: none } }
+  .result-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .result-head h2 { font-size: 17px; margin: 0; }
+  .badge { font-size: 12px; color: var(--gold); border: 1px solid #e7d6b4; background: #fdf7ea; padding: 4px 10px; border-radius: 999px; }
+  #output {
+    white-space: pre-wrap; line-height: 1.9; font-size: 15.5px; min-height: 120px;
+    background: #fbfaf6; border-radius: 12px; padding: 18px 20px; border: 1px dashed #e6dfd1;
+  }
+  #output:empty::before { content: "名字和寓意会在这里一点点出现…"; color: #a9b3ae; }
+  .cursor::after { content: "▍"; color: var(--brand-2); animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0 } }
+
+  .err {
+    display: none; margin-top: 14px; padding: 12px 14px; border-radius: 12px;
+    background: #fdf1ef; border: 1px solid #f3cfc7; color: #a33b28; font-size: 14px;
+  }
+  .err.show { display: block; }
+
+  .history { margin-top: 34px; }
+  .history-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+  .history-head h2 { font-size: 17px; margin: 0; }
+  .link { font-size: 13px; color: var(--brand); cursor: pointer; background: none; border: 0; padding: 0; }
+  .history-list { display: grid; gap: 10px; }
+  .item {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px;
+    cursor: pointer; transition: border-color .15s, transform .1s;
+  }
+  .item:hover { border-color: #cfe0d9; transform: translateY(-1px); }
+  .item-meta { font-size: 12px; color: var(--muted); display: flex; gap: 10px; flex-wrap: wrap; }
+  .item-title { font-size: 15px; margin: 6px 0 4px; font-weight: 600; }
+  .item-text { font-size: 13px; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .empty { color: var(--muted); font-size: 14px; padding: 16px; text-align: center; border: 1px dashed var(--line); border-radius: 14px; }
+  footer { text-align: center; color: #9aa5a0; font-size: 12px; margin-top: 40px; line-height: 1.8; }
+  @media (max-width: 560px) { h1 { font-size: 24px } .wrap { padding-top: 28px } .field { flex: 1 1 100% } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="seal">锦名</div>
+    <h1>AI 起名平台</h1>
+    <p>多模型切换 · 流式生成 · 自动保存历史</p>
+  </header>
+
+  <section class="panel">
+    <div class="row">
+      <div class="field" style="flex:2 1 300px">
+        <label for="requirement">起名需求</label>
+        <textarea id="requirement" maxlength="200" placeholder="例如：男孩、姓陈、希望有书卷气，忌讳生僻字"></textarea>
+        <div class="tags" id="tags">
+          <span class="tag">男孩 · 国风</span>
+          <span class="tag">女孩 · 温婉</span>
+          <span class="tag">英文名 · 商务</span>
+          <span class="tag">中性 · 简约</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="style">名字风格</label>
+        <select id="style">
+          <option value="国风">国风（诗词典故）</option>
+          <option value="现代简约">现代简约</option>
+          <option value="英文名">英文名</option>
+          <option value="中性百搭">中性百搭</option>
+        </select>
+        <label for="model" style="margin-top:14px">选择模型</label>
+        <select id="model"><option value="doubao">加载中…</option></select>
+        <div class="hint" id="modelHint"></div>
+      </div>
+    </div>
+
+    <button class="primary" id="submitBtn">开始起名</button>
+    <div class="status" id="status"><span class="dot"></span><span id="statusText">正在生成…</span></div>
+    <div class="err" id="err"></div>
+  </section>
+
+  <section class="result-card" id="resultCard">
+    <div class="result-head">
+      <h2>名字方案</h2>
+      <span class="badge" id="modelBadge">—</span>
+    </div>
+    <div id="output" class="cursor"></div>
+    <div class="hint" id="saveHint"></div>
+  </section>
+
+  <section class="history">
+    <div class="history-head">
+      <h2>起名历史</h2>
+      <button class="link" id="refreshHistory">刷新</button>
+    </div>
+    <div class="history-list" id="historyList"><div class="empty">还没有历史记录</div></div>
+  </section>
+
+  <footer>密钥只保存在服务器环境变量中 · 本页面仅用于教学实验</footer>
+</div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const btn = $('submitBtn');
+  const output = $('output');
+  const errBox = $('err');
+  const statusBox = $('status');
+  const statusText = $('statusText');
+  const resultCard = $('resultCard');
+  const modelBadge = $('modelBadge');
+  const saveHint = $('saveHint');
+
+  // --- 模型清单 ---
+  async function loadModels() {
+    try {
+      const r = await fetch('/api/models');
+      const data = await r.json();
+      const sel = $('model');
+      sel.innerHTML = '';
+      (data.models || []).forEach((m) => {
+        const opt = document.createElement('option');
+        opt.value = m.id;
+        opt.textContent = m.label + (m.ready ? '' : '（未配密钥）');
+        opt.disabled = !m.ready;
+        if (!m.ready && m.id === 'doubao') { /* 保留可选项，让用户看到提示 */ }
+        sel.appendChild(opt);
+      });
+      const ready = (data.models || []).filter((m) => m.ready)[0];
+      if (ready) sel.value = ready.id;
+      else $('modelHint').textContent = '尚未配置任何模型密钥，请在环境变量中填入后再试';
+    } catch (e) {
+      $('modelHint').textContent = '模型列表加载失败：' + e.message;
+    }
+  }
+
+  // --- 快捷标签 ---
+  $('tags').addEventListener('click', (e) => {
+    const t = e.target.closest('.tag');
+    if (!t) return;
+    $('requirement').value = t.textContent.trim();
+    const styleMap = { '国风': '国风', '温婉': '国风', '商务': '英文名', '简约': '现代简约' };
+    const key = Object.keys(styleMap).find((k) => t.textContent.includes(k));
+    if (key) $('style').value = styleMap[key];
+  });
+
+  // --- 调接口 + 流式渲染 ---
+  async function startNaming() {
+    const requirement = $('requirement').value.trim();
+    errBox.classList.remove('show');
+    if (!requirement) {
+      errBox.textContent = '请先写下起名需求，例如：男孩、国风、简约。';
+      errBox.classList.add('show');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = '生成中…';
+    statusBox.classList.add('show');
+    statusText.textContent = '正在连接模型…';
+    resultCard.classList.add('show');
+    output.textContent = '';
+    output.classList.add('cursor');
+    saveHint.textContent = '';
+    modelBadge.textContent = $('model').selectedOptions[0]?.textContent || '';
+
+    let acc = '';
+    try {
+      const res = await fetch('/api/name', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          requirement,
+          style: $('style').value,
+          model: $('model').value,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || ('请求失败：' + res.status));
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const parts = buffer.split('\n\n');
+        buffer = parts.pop() || '';
+
+        for (const part of parts) {
+          const line = part.split('\n').find((l) => l.trim().startsWith('data:'));
+          if (!line) continue;
+          let msg;
+          try { msg = JSON.parse(line.trim().slice(5).trim()); } catch { continue; }
+
+          if (msg.type === 'meta') {
+            modelBadge.textContent = msg.label;
+            statusText.textContent = '正在生成，模型：' + msg.label;
+          } else if (msg.type === 'delta') {
+            acc += msg.text;
+            output.textContent = acc;
+            statusText.textContent = '正在生成…（已 ' + acc.length + ' 字）';
+          } else if (msg.type === 'error') {
+            throw new Error(msg.message);
+          } else if (msg.type === 'done') {
+            saveHint.textContent = msg.saved ? '已保存到 Supabase 起名历史' : ('历史未保存：' + (msg.reason || '未知原因'));
+            if (msg.saved) loadHistory();
+          }
+        }
+      }
+      if (!acc) throw new Error('模型没有返回内容，请检查模型名 / 密钥是否可用');
+    } catch (e) {
+      errBox.textContent = e.message;
+      errBox.classList.add('show');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '开始起名';
+      statusBox.classList.remove('show');
+      output.classList.remove('cursor');
+    }
+  }
+
+  btn.addEventListener('click', startNaming);
+  $('requirement').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) startNaming();
+  });
+
+  // --- 历史记录 ---
+  const fmt = (s) => {
+    const d = new Date(s);
+    const p = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  };
+
+  async function loadHistory() {
+    const list = $('historyList');
+    try {
+      const r = await fetch('/api/history');
+      const data = await r.json();
+      if (data.warning) {
+        list.innerHTML = `<div class="empty">${data.warning}</div>`;
+        return;
+      }
+      if (data.error) {
+        list.innerHTML = `<div class="empty">读取失败：${data.error}（检查建表 SQL 和 RLS 权限）</div>`;
+        return;
+      }
+      if (!data.rows.length) {
+        list.innerHTML = '<div class="empty">还没有历史记录，先起一个名字吧</div>';
+        return;
+      }
+      list.innerHTML = '';
+      data.rows.forEach((row) => {
+        const el = document.createElement('div');
+        el.className = 'item';
+        const first = (row.name_result || '').split('\n').find((l) => l.trim()) || '（无内容）';
+        el.innerHTML = `
+          <div class="item-meta"><span>${fmt(row.created_at)}</span><span>模型：${row.model_name}</span></div>
+          <div class="item-title"></div>
+          <div class="item-text"></div>`;
+        el.querySelector('.item-title').textContent = row.user_requirement;
+        el.querySelector('.item-text').textContent = first;
+        el.addEventListener('click', () => {
+          resultCard.classList.add('show');
+          output.textContent = row.name_result;
+          modelBadge.textContent = row.model_name;
+          saveHint.textContent = '历史记录 · ' + fmt(row.created_at);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+        list.appendChild(el);
+      });
+    } catch (e) {
+      list.innerHTML = `<div class="empty">读取失败：${e.message}</div>`;
+    }
+  }
+
+  $('refreshHistory').addEventListener('click', loadHistory);
+  loadModels();
+  loadHistory();
+</script>
+</body>
+</html>
