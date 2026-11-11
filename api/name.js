@@ -87,23 +87,35 @@ export default async function handler(req, res) {
     }
   });
 
-  let upstream;
-  try {
-    upstream = await fetch(`${conf.baseURL.replace(/\/$/, '')}/chat/completions`, {
+  // 请求体对所有模型都一样：这就是 OpenAI 兼容协议的好处
+  const payload = JSON.stringify({
+    model: conf.model,
+    messages,
+    stream: true,
+    temperature: 0.9,
+    max_tokens: 900,
+  });
+  const headers = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${conf.apiKey}`,
+  };
+  const post = (base) =>
+    fetch(`${base.replace(/\/$/, '')}/chat/completions`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${conf.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: conf.model,
-        messages,
-        stream: true,
-        temperature: 0.9,
-        max_tokens: 900,
-      }),
+      headers,
+      body: payload,
       signal: controller.signal,
     });
+
+  let upstream;
+  try {
+    upstream = await post(conf.baseURL);
+    // 火山方舟新旧版本路径兼容：官方现为 /api/v3，早期文档写 /api/v1
+    const v = conf.baseURL.match(/\/api\/v(\d)/);
+    if (upstream.status === 404 && v) {
+      const alt = conf.baseURL.replace(/\/api\/v\d/, `/api/v${v[1] === '3' ? '1' : '3'}`);
+      upstream = await post(alt);
+    }
   } catch (err) {
     send({ type: 'error', message: `连接模型接口失败：${err.message}` });
     res.end();

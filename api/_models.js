@@ -9,7 +9,7 @@ export const modelConfigMap = {
   doubao: {
     id: 'doubao',
     label: '豆包（火山方舟）',
-    baseURL: process.env.DOUBAO_BASE_URL || 'https://ark.cn-beijing.volces.com/api/v1',
+    baseURL: process.env.DOUBAO_BASE_URL || 'https://ark.cn-beijing.volces.com/api/v3',
     apiKeyEnv: 'DOUBAO_API_KEY',
     model: process.env.DOUBAO_MODEL || 'doubao-seed-1-6-250615',
     apiKey: process.env.DOUBAO_API_KEY || '',
