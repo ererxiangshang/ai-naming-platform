@@ -33,10 +33,10 @@ export const modelConfigMap = {
   },
   kimi: {
     id: 'kimi',
-    label: 'Kimi（月之暗面）',
+    label: 'Kimi（月之暗面 k3.1）',
     baseURL: process.env.KIMI_BASE_URL || 'https://api.moonshot.cn/v1',
     apiKeyEnv: 'KIMI_API_KEY',
-    model: process.env.KIMI_MODEL || 'moonshot-v1-8k',
+    model: process.env.KIMI_MODEL || 'kimi-k3.1-pro',
     apiKey: process.env.KIMI_API_KEY || '',
   },
 };
